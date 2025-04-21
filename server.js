@@ -47,7 +47,7 @@
 //                 const keyMatch = line.match(keyPattern);
 
 //                 if (keyMatch && keyMatch[1]) {
-//                     const keyUrl = keyMatch[1].startsWith('http')
+//                     const keyUrl = keyMatch[1].startsWith('https')
 //                         ? keyMatch[1]
 //                         : new URL(keyMatch[1], baseUrl).href;
 
@@ -57,13 +57,13 @@
 //             }
 //             // Handle nested playlists (.m3u8 files)
 //             else if (!line.startsWith('#') && line.endsWith('.m3u8')) {
-//                 const playlistUrl = line.startsWith('http') ? line : new URL(line, baseUrl).href;
+//                 const playlistUrl = line.startsWith('https') ? line : new URL(line, baseUrl).href;
 //                 modifiedLines.push(`/stream?url=${encodeURIComponent(playlistUrl)}`);
 //             }
 //             // Handle segment URLs (not starting with # and not empty)
 //             else if (!line.startsWith('#') && line.length > 0) {
 //                 // This is likely a segment URL
-//                 const segmentUrl = line.startsWith('http') ? line : new URL(line, baseUrl).href;
+//                 const segmentUrl = line.startsWith('https') ? line : new URL(line, baseUrl).href;
 //                 modifiedLines.push(`/segment?url=${encodeURIComponent(segmentUrl)}`);
 //             }
 //             else {
@@ -171,7 +171,7 @@
 //     <html>
 //     <head>
 //         <title>Stream Player</title>
-//         <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
+//         <script src="://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
 //         <style>
 //             body { margin: 0; padding: 0; background-color: #000; overflow: hidden; }
 //             #video { width: 100%; height: 100vh; }
@@ -511,7 +511,7 @@
 
 // // Set up server
 // const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`✅ Proxy server running on http://localhost:${PORT}`));
+// app.listen(PORT, () => console.log(`✅ Proxy server running on https://localhost:${PORT}`));
 
 
 // with api
@@ -725,7 +725,7 @@ app.get("/", (req, res) => {
             </div>
             
             <div class="form-group">
-                <label for="api-method">HTTP Method:</label>
+                <label for="api-method">https Method:</label>
                 <select id="api-method">
                     <option value="GET">GET</option>
                     <option value="POST">POST</option>
@@ -943,7 +943,7 @@ app.get("/stream", async (req, res) => {
                 const keyMatch = line.match(keyPattern);
 
                 if (keyMatch && keyMatch[1]) {
-                    const keyUrl = keyMatch[1].startsWith('http')
+                    const keyUrl = keyMatch[1].startsWith('https')
                         ? keyMatch[1]
                         : new URL(keyMatch[1], baseUrl).href;
 
@@ -953,13 +953,13 @@ app.get("/stream", async (req, res) => {
             }
             // Handle nested playlists (.m3u8 files)
             else if (!line.startsWith('#') && line.endsWith('.m3u8')) {
-                const playlistUrl = line.startsWith('http') ? line : new URL(line, baseUrl).href;
+                const playlistUrl = line.startsWith('https') ? line : new URL(line, baseUrl).href;
                 modifiedLines.push(`/stream?url=${encodeURIComponent(playlistUrl)}`);
             }
             // Handle segment URLs (not starting with # and not empty)
             else if (!line.startsWith('#') && line.length > 0) {
                 // This is likely a segment URL
-                const segmentUrl = line.startsWith('http') ? line : new URL(line, baseUrl).href;
+                const segmentUrl = line.startsWith('https') ? line : new URL(line, baseUrl).href;
                 modifiedLines.push(`/segment?url=${encodeURIComponent(segmentUrl)}`);
             }
             else {
@@ -1143,7 +1143,7 @@ app.get("/player", (req, res) => {
     <html>
     <head>
         <title>HLS Stream Player</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
+        <script src="://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
         <style>
             body { margin: 0; background-color: #000; font-family: Arial, sans-serif; color: white; }
             .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
@@ -1245,4 +1245,4 @@ app.get("/player", (req, res) => {
 
 // Set up server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Proxy server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`✅ Proxy server running on https://localhost:${PORT}`));
