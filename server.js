@@ -1143,7 +1143,7 @@ app.get("/player", (req, res) => {
     <html>
     <head>
         <title>HLS Stream Player</title>
-        <script src="://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
         <style>
             body { margin: 0; background-color: #000; font-family: Arial, sans-serif; color: white; }
             .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
