@@ -505,7 +505,7 @@ app.get("/stream", async (req, res) => {
         isAllowed = !origin || origin.includes('localhost') || origin.includes('127.0.0.1') || isFromSphubTech;
     } else {
         // On production, the server should be running on sphub.tech domain
-        isAllowed = host || currentHost === productionDomain || isFromSphubTech;
+        isAllowed = currentHost === productionDomain || isFromSphubTech;
     }
     
     console.log('Access check:', {
