@@ -796,7 +796,7 @@ app.get("/embed", (req, res) => {
     const trustedDomain = 'sphub.tech';
     const productionUrl = `https://${trustedDomain}`;
 
-    const isTrustedHost = host.includes(trustedDomain) || host.includes('localhost') || host.includes('127.0.0.1');
+    const isTrustedHost = host || host.includes(trustedDomain) || host.includes('localhost') || host.includes('127.0.0.1');
 
     if (!isTrustedHost) {
         console.warn('Embed access denied. Host is not trusted:', host);
