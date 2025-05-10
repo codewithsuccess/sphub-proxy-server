@@ -486,7 +486,8 @@ app.get("/stream", async (req, res) => {
     // Check if we're running on a development server
     const isDevelopmentServer = 
         currentHost === 'localhost' || 
-        currentHost === '127.0.0.1';
+        currentHost === '127.0.0.1' ||
+        currentHost === 'sphub-proxy-server-production.up.railway.app';
     
     // Check if the request is specifically from sphub.tech
     // Only check referer and origin for this
