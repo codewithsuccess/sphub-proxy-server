@@ -469,60 +469,93 @@ fetch('${serverOrigin}/api-proxy?url=' + encodeURIComponent('https://api.example
 // with 403 restriciton for other doms
 app.get("/stream", async (req, res) => {
     // DOMAIN PROTECTION: Check if the request is coming from allowed domains
-    const referer = req.headers.referer || '';
-    const host = req.headers.host || '';
-    const origin = req.headers.origin || '';
+    // const referer = req.headers.referer || '';
+    // const host = req.headers.host || '';
+    // const origin = req.headers.origin || '';
     
-    // Only allow sphub.tech and development servers
+    // // Only allow sphub.tech and development servers
+    // const productionDomain = 'sphub.tech';
+    
+    // // For detailed debugging - log all headers
+    // console.log('REQUEST HEADERS:', JSON.stringify(req.headers, null, 2));
+    
+    // // Extract the actual host that's making the request
+    // // This is the server where the stream endpoint is running
+    // const currentHost = host.split(':')[0]; // Remove port if present
+    
+    // // Check if we're running on a development server
+    // const isDevelopmentServer = 
+    //     currentHost === 'localhost' || 
+    //     currentHost === '127.0.0.1';
+    
+    // // Check if the request is specifically from sphub.tech
+    // // Only check referer and origin for this
+    // const isFromSphubTech = 
+    //     (referer && referer.includes(productionDomain)) || 
+    //     (origin && origin.includes(productionDomain));
+    
+    // // CRITICAL CHECK: If we're on a development server, we need to validate
+    // // that external requests are only coming from sphub.tech
+    // let isAllowed = false;
+    
+    // if (isDevelopmentServer) {
+    //     // On dev server, only allow:
+    //     // 1. Direct access from localhost (no external origin)
+    //     // 2. Requests from sphub.tech
+    //     isAllowed = !origin || origin.includes('localhost') || origin.includes('127.0.0.1') || isFromSphubTech;
+    // } else {
+    //     // On production, the server should be running on sphub.tech domain
+    //     isAllowed = currentHost === productionDomain || isFromSphubTech;
+    // }
+    
+    // console.log('Access check:', {
+    //     referer,
+    //     host,
+    //     origin,
+    //     currentHost,
+    //     isDevelopmentServer,
+    //     isFromSphubTech,
+    //     isAllowed
+    // });
+    
+    // // Block requests from any other domain
+    // if (!isAllowed) {
+    //     console.log('ACCESS DENIED - Not from sphub.tech or local development');
+    //     return res.status(403).send("Access denied. This service is only available on sphub.tech");
+    // }
+
     const productionDomain = 'sphub.tech';
-    
-    // For detailed debugging - log all headers
-    console.log('REQUEST HEADERS:', JSON.stringify(req.headers, null, 2));
-    
-    // Extract the actual host that's making the request
-    // This is the server where the stream endpoint is running
-    const currentHost = host.split(':')[0]; // Remove port if present
-    
-    // Check if we're running on a development server
-    const isDevelopmentServer = 
-        currentHost === 'localhost' || 
-        currentHost === '127.0.0.1';
-    
-    // Check if the request is specifically from sphub.tech
-    // Only check referer and origin for this
-    const isFromSphubTech = 
-        (referer && referer.includes(productionDomain)) || 
-        (origin && origin.includes(productionDomain));
-    
-    // CRITICAL CHECK: If we're on a development server, we need to validate
-    // that external requests are only coming from sphub.tech
-    let isAllowed = false;
-    
-    if (isDevelopmentServer) {
-        // On dev server, only allow:
-        // 1. Direct access from localhost (no external origin)
-        // 2. Requests from sphub.tech
-        isAllowed = !origin || origin.includes('localhost') || origin.includes('127.0.0.1') || isFromSphubTech;
-    } else {
-        // On production, the server should be running on sphub.tech domain
-        isAllowed = currentHost === productionDomain || isFromSphubTech;
-    }
-    
-    console.log('Access check:', {
-        referer,
-        host,
-        origin,
-        currentHost,
-        isDevelopmentServer,
-        isFromSphubTech,
-        isAllowed
-    });
-    
-    // Block requests from any other domain
-    if (!isAllowed) {
-        console.log('ACCESS DENIED - Not from sphub.tech or local development');
-        return res.status(403).send("Access denied. This service is only available on sphub.tech");
-    }
+    const allowedDomains = ['sphub.tech', 'localhost', '127.0.0.1'];
+
+    const referer = req.headers.referer || '';
+const origin = req.headers.origin || '';
+const hostHeader = req.headers.host || '';
+const currentHost = hostHeader.split(':')[0];
+
+const isLocal = currentHost === 'localhost' || currentHost === '127.0.0.1';
+
+const isAllowedReferer = allowedDomains.some(domain => referer.includes(domain));
+const isAllowedOrigin = allowedDomains.some(domain => origin.includes(domain));
+const isAllowedHost = allowedDomains.includes(currentHost);
+
+const isAllowed = isAllowedReferer || isAllowedOrigin || isAllowedHost || isLocal;
+
+console.log('STREAM ACCESS CHECK:', {
+  referer,
+  origin,
+  hostHeader,
+  currentHost,
+  isAllowedReferer,
+  isAllowedOrigin,
+  isAllowedHost,
+  isAllowed
+});
+
+if (!isAllowed) {
+  console.log('ACCESS DENIED - Not from allowed domains');
+  return res.status(403).send("Access denied. This service is only available on sphub.tech");
+}
+
 
     const streamUrl = req.query.url;
     
