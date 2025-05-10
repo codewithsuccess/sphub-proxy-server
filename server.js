@@ -524,8 +524,8 @@ app.get("/stream", async (req, res) => {
     //     return res.status(403).send("Access denied. This service is only available on sphub.tech");
     // }
 
-    const productionDomain = 'sphub.tech';
-    const allowedDomains = ['sphub.tech', 'localhost', '127.0.0.1'];
+    // const productionDomain = 'sphub.tech';
+    const allowedDomains = ['sphub.tech', 'localhost', '127.0.0.1', 'sphub-proxy-server-production.up.railway.app'];
 
     const referer = req.headers.referer || '';
 const origin = req.headers.origin || '';
