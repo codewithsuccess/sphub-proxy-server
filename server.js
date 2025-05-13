@@ -467,6 +467,146 @@ fetch('${serverOrigin}/api-proxy?url=' + encodeURIComponent('https://api.example
 // });
 
 // with 403 restriciton for other doms
+// app.get("/stream", async (req, res) => {
+//     // DOMAIN PROTECTION: Check if the request is coming from allowed domains
+//     const referer = req.headers.referer || '';
+//     const host = req.headers.host || '';
+//     const origin = req.headers.origin || '';
+    
+//     // Only allow sphub.tech and development servers
+//     const productionDomain = 'sphub.tech';
+    
+//     // For detailed debugging - log all headers
+//     console.log('REQUEST HEADERS:', JSON.stringify(req.headers, null, 2));
+    
+//     // Extract the actual host that's making the request
+//     // This is the server where the stream endpoint is running
+//     const currentHost = host.split(':')[0]; // Remove port if present
+    
+//     // Check if we're running on a development server
+//     const isDevelopmentServer = 
+//         currentHost === 'localhost' || 
+//         currentHost === '127.0.0.1' ||
+//         currentHost === 'sphub-proxy-server-production.up.railway.app';
+    
+//     // Check if the request is specifically from sphub.tech
+//     // Only check referer and origin for this
+//     const isFromSphubTech = 
+//         (referer && referer.includes(productionDomain)) || 
+//         (origin && origin.includes(productionDomain));
+    
+//     // CRITICAL CHECK: If we're on a development server, we need to validate
+//     // that external requests are only coming from sphub.tech
+//     let isAllowed = false;
+    
+//     if (isDevelopmentServer) {
+//         // On dev server, only allow:
+//         // 1. Direct access from localhost (no external origin)
+//         // 2. Requests from sphub.tech
+//         isAllowed = !origin || origin.includes('localhost') || origin.includes('127.0.0.1') || isFromSphubTech;
+//     } else {
+//         // On production, the server should be running on sphub.tech domain
+//         isAllowed = currentHost === productionDomain || isFromSphubTech;
+//     }
+    
+//     console.log('Access check:', {
+//         referer,
+//         host,
+//         origin,
+//         currentHost,
+//         isDevelopmentServer,
+//         isFromSphubTech,
+//         isAllowed
+//     });
+    
+//     // Block requests from any other domain
+//     if (!isAllowed) {
+//         console.log('ACCESS DENIED - Not from sphub.tech or local development');
+//         return res.status(403).send("Access denied. This service is only available on sphub.tech");
+//     }
+
+//     // const productionDomain = 'sphub.tech';
+    
+
+//     const streamUrl = req.query.url;
+    
+//     if (!streamUrl) {
+//         return res.status(400).send("M3U8 URL is required");
+//     }
+
+//     try {
+//         console.log(`Proxying stream from: ${streamUrl}`);
+
+//         // Fetch M3U8 file without sending referer/origin
+//         const m3u8Response = await request(streamUrl, {
+//             headers: {
+//                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+//                 "Accept": "*/*"
+//             }
+//         });
+
+//         if (m3u8Response.statusCode !== 200) {
+//             return res.status(m3u8Response.statusCode).send(`Error fetching M3U8: ${m3u8Response.statusCode}`);
+//         }
+
+//         // Read the response body as text
+//         const m3u8Data = await m3u8Response.body.text();
+
+//         // Base URL for resolving relative URLs
+//         const baseUrl = streamUrl.substring(0, streamUrl.lastIndexOf('/') + 1);
+
+//         // Process the M3U8 content line by line
+//         const lines = m3u8Data.split('\n');
+//         const modifiedLines = [];
+
+//         for (let i = 0; i < lines.length; i++) {
+//             let line = lines[i].trim();
+
+//             // Handle EXT-X-KEY for encryption
+//             if (line.startsWith('#EXT-X-KEY')) {
+//                 const keyPattern = /URI="([^"]+)"/;
+//                 const keyMatch = line.match(keyPattern);
+
+//                 if (keyMatch && keyMatch[1]) {
+//                     const keyUrl = keyMatch[1].startsWith('https')
+//                         ? keyMatch[1]
+//                         : new URL(keyMatch[1], baseUrl).href;
+
+//                     line = line.replace(keyPattern, `URI="/key?url=${encodeURIComponent(keyUrl)}"`);
+//                 }
+//                 modifiedLines.push(line);
+//             }
+//             // Handle nested playlists (.m3u8 files)
+//             else if (!line.startsWith('#') && line.endsWith('.m3u8')) {
+//                 const playlistUrl = line.startsWith('https') ? line : new URL(line, baseUrl).href;
+//                 modifiedLines.push(`/stream?url=${encodeURIComponent(playlistUrl)}`);
+//             }
+//             // Handle segment URLs (not starting with # and not empty)
+//             else if (!line.startsWith('#') && line.length > 0) {
+//                 // This is likely a segment URL
+//                 const segmentUrl = line.startsWith('https') ? line : new URL(line, baseUrl).href;
+//                 modifiedLines.push(`/segment?url=${encodeURIComponent(segmentUrl)}`);
+//             }
+//             else {
+//                 // Pass through all other lines unchanged (comments, headers, etc.)
+//                 modifiedLines.push(line);
+//             }
+//         }
+
+//         // Return the modified M3U8 content
+//         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+//         res.send(modifiedLines.join('\n'));
+
+//     } catch (err) {
+//         console.error("Proxy error:", err.message);
+//         res.status(500).send(`Failed to fetch the stream: ${err.message}`);
+//     }
+// });
+
+// Global logging control - set to false for production
+const enableLogging = false;
+
+// Fixed Stream Route
 app.get("/stream", async (req, res) => {
     // DOMAIN PROTECTION: Check if the request is coming from allowed domains
     const referer = req.headers.referer || '';
@@ -476,11 +616,12 @@ app.get("/stream", async (req, res) => {
     // Only allow sphub.tech and development servers
     const productionDomain = 'sphub.tech';
     
-    // For detailed debugging - log all headers
-    console.log('REQUEST HEADERS:', JSON.stringify(req.headers, null, 2));
+    // For detailed debugging - only log headers if logging is enabled
+    if (enableLogging) {
+        console.log('REQUEST HEADERS:', JSON.stringify(req.headers, null, 2));
+    }
     
     // Extract the actual host that's making the request
-    // This is the server where the stream endpoint is running
     const currentHost = host.split(':')[0]; // Remove port if present
     
     // Check if we're running on a development server
@@ -490,43 +631,36 @@ app.get("/stream", async (req, res) => {
         currentHost === 'sphub-proxy-server-production.up.railway.app';
     
     // Check if the request is specifically from sphub.tech
-    // Only check referer and origin for this
     const isFromSphubTech = 
         (referer && referer.includes(productionDomain)) || 
         (origin && origin.includes(productionDomain));
     
-    // CRITICAL CHECK: If we're on a development server, we need to validate
-    // that external requests are only coming from sphub.tech
+    // CRITICAL CHECK: Validate request sources
     let isAllowed = false;
     
     if (isDevelopmentServer) {
-        // On dev server, only allow:
-        // 1. Direct access from localhost (no external origin)
-        // 2. Requests from sphub.tech
+        // On dev server, only allow local requests or from sphub.tech
         isAllowed = !origin || origin.includes('localhost') || origin.includes('127.0.0.1') || isFromSphubTech;
     } else {
         // On production, the server should be running on sphub.tech domain
         isAllowed = currentHost === productionDomain || isFromSphubTech;
     }
     
-    console.log('Access check:', {
-        referer,
-        host,
-        origin,
-        currentHost,
-        isDevelopmentServer,
-        isFromSphubTech,
-        isAllowed
-    });
+    // Only log access check if logging is enabled
+    if (enableLogging) {
+        console.log('Access check:', {
+            referer, host, origin, currentHost,
+            isDevelopmentServer, isFromSphubTech, isAllowed
+        });
+    }
     
     // Block requests from any other domain
     if (!isAllowed) {
-        console.log('ACCESS DENIED - Not from sphub.tech or local development');
+        if (enableLogging) {
+            console.log('ACCESS DENIED - Not from sphub.tech or local development');
+        }
         return res.status(403).send("Access denied. This service is only available on sphub.tech");
     }
-
-    // const productionDomain = 'sphub.tech';
-    
 
     const streamUrl = req.query.url;
     
@@ -535,7 +669,9 @@ app.get("/stream", async (req, res) => {
     }
 
     try {
-        console.log(`Proxying stream from: ${streamUrl}`);
+        if (enableLogging) {
+            console.log(`Proxying stream from: ${streamUrl}`);
+        }
 
         // Fetch M3U8 file without sending referer/origin
         const m3u8Response = await request(streamUrl, {
@@ -598,12 +734,14 @@ app.get("/stream", async (req, res) => {
         res.send(modifiedLines.join('\n'));
 
     } catch (err) {
-        console.error("Proxy error:", err.message);
+        if (enableLogging) {
+            console.error("Proxy error:", err.message);
+        }
         res.status(500).send(`Failed to fetch the stream: ${err.message}`);
     }
 });
 
-// Route to handle segment requests
+// Fixed Segment Route
 app.get("/segment", async (req, res) => {
     const segmentUrl = req.query.url;
 
@@ -612,7 +750,10 @@ app.get("/segment", async (req, res) => {
     }
 
     try {
-        console.log(`Fetching segment: ${segmentUrl}`);
+        // Only log if logging is enabled - this is what was missing!
+        if (enableLogging) {
+            console.log(`Fetching segment: ${segmentUrl}`);
+        }
 
         // Fetch segment without referer/origin headers
         const segmentResponse = await request(segmentUrl, {
@@ -636,10 +777,51 @@ app.get("/segment", async (req, res) => {
         // Stream the segment data directly
         segmentResponse.body.pipe(res);
     } catch (err) {
-        console.error("Segment proxy error:", err.message);
+        if (enableLogging) {
+            console.error("Segment proxy error:", err.message);
+        }
         res.status(500).send(`Failed to fetch segment: ${err.message}`);
     }
 });
+
+
+// Route to handle segment requests
+// app.get("/segment", async (req, res) => {
+//     const segmentUrl = req.query.url;
+
+//     if (!segmentUrl) {
+//         return res.status(400).send("Segment URL is required");
+//     }
+
+//     try {
+//         console.log(`Fetching segment: ${segmentUrl}`);
+
+//         // Fetch segment without referer/origin headers
+//         const segmentResponse = await request(segmentUrl, {
+//             headers: {
+//                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+//                 "Accept": "*/*"
+//             }
+//         });
+
+//         if (segmentResponse.statusCode !== 200) {
+//             return res.status(segmentResponse.statusCode).send(`Error fetching segment: ${segmentResponse.statusCode}`);
+//         }
+
+//         // Detect content type based on URL
+//         if (segmentUrl.toLowerCase().includes('.m4s') || segmentUrl.toLowerCase().includes('.mp4')) {
+//             res.setHeader('Content-Type', 'video/mp4');
+//         } else {
+//             res.setHeader('Content-Type', 'video/MP2T');
+//         }
+
+//         // Stream the segment data directly
+//         segmentResponse.body.pipe(res);
+//     } catch (err) {
+//         console.error("Segment proxy error:", err.message);
+//         res.status(500).send(`Failed to fetch segment: ${err.message}`);
+//     }
+// });
 
 // Route to handle encryption key requests
 app.get("/key", async (req, res) => {
