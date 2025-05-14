@@ -628,7 +628,7 @@ app.get("/stream", async (req, res) => {
     const isDevelopmentServer = 
         currentHost === 'localhost' || 
         currentHost === '127.0.0.1' ||
-        currentHost === 'https://sphub-proxy-server-9ya8.onrender.com' ||
+        currentHost === 'sphub-proxy-server-9ya8.onrender.com' ||
         currentHost === 'sphub-proxy-server-production.up.railway.app';
     
     // Check if the request is specifically from sphub.tech
